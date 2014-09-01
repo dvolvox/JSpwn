@@ -1,6 +1,8 @@
 Copyright
 =====
 
+Duarte Monteiro (etraud123) JSPwn
+
 Nishant Das Patnaik (nishant.dp@) JsPrime
 
 Frederik (mozfreddyb) Scanjs
