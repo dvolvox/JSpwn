@@ -15,10 +15,6 @@ scanjsModule.config(['$routeProvider',
         templateUrl: 'partials/experiment.html',
         controller: 'ExperimentCtrl'
       }).
-      when('/coderoad', {
-        templateUrl: 'partials/coderoad.html',
-        controller: 'coderoadctrl'
-      }).
       otherwise({
         redirectTo: '/scan/client'
       });

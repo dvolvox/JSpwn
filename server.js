@@ -13,4 +13,4 @@ require ('http').createServer(function (req, res) {
   }).resume();
 }).listen(PORT);
 
-console.log("> node-static is listening on http://127.0.0.1:"+PORT);
+console.log("> node-static is listening on http://127.0.0.1:"+PORT+"/client/#/scan");
