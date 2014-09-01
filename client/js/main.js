@@ -20,6 +20,6 @@ scanjsModule.config(['$routeProvider',
         controller: 'coderoadctrl'
       }).
       otherwise({
-        redirectTo: '/scan'
+        redirectTo: '/scan/client'
       });
   }]);
