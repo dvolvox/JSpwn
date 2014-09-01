@@ -1,0 +1,5 @@
+<div ng-controller="coderoadctrl">
+	<h1>Hello {{getname()}}</h1></br>
+	<div id="cy" style="width:100%; height:100%"></div>
+</div>
+
