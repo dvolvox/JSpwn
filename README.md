@@ -5,7 +5,7 @@ Duarte Monteiro (etraud123) JSPwn
 
 Nishant Das Patnaik (nishant.dp@) JsPrime
 
-Frederik (mozfreddyb) Scanjs
+Paul Theriault (pauljt) Scanjs
 
 JSpwn
 =====
