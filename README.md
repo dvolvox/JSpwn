@@ -20,8 +20,21 @@ With the engine of ScanJS to detect vulnerabilities and the code flux feature of
 Example
 =====
 
-Open app: node server.js;
-Go to: http://localhost:4000/client/#/scan;
-Select File from folder;
-Enable REGEXP Custom;
+Open app: node server.js.
+Go to: http://localhost:4000/client/#/scan.
+Select File from folder.
+Enable REGEXP Custom.
 <Scan>
+
+
+Custom Scanning
+======
+
+Source Array: Analyzer.js:26
+Sink Array: Analyzer.js:27
+
+Regex: scanctrl.js: 44/45/46
+
+User-Input-Validator: scanctrl.js:865
+
+Attack-vector: scanctrl.js:900
