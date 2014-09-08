@@ -1,4 +1,4 @@
-/*d0kt0r 20/09/2014
+-/*d0kt0r 20/09/2014
 1-them vars
 2-scanjs
 3-coderoad
@@ -52,7 +52,7 @@ scanjsModule.controller('ScanCtrl', ['$scope', 'ScanSvc', function ScanCtrl($sco
   $scope.sys2 = "";
   $scope.fna = ""; 
   $scope.teste = "";
-  $scope.ret = "Variavel de retorno is empyth";
+  $scope.ret = "return var is empyth";
 
 
   //Testing Highlight lines
@@ -862,7 +862,7 @@ scanjsModule.controller('ScanCtrl', ['$scope', 'ScanSvc', function ScanCtrl($sco
   ____) |_| |_| |\  | . \| |__| | |___| |__| | | \ \| |____| |____ 
  |_____/|_____|_| \_|_|\_\_____/|______\_____|_|  \_\______|______|
 */
-  $scope.traps = ["location","prompt","user"];
+  $scope.traps = ["location","prompt","input"];
   $scope.isUserIn = false;
 
   //simple match all active variables to a predefined array with user input functions
