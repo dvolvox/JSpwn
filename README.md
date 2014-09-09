@@ -25,7 +25,7 @@ With the engine of ScanJS to detect vulnerabilities and the code flux feature of
 Example
 =====
 
-<GUI>
+*GUI
 
 Open app: node server.js.
 
@@ -37,9 +37,11 @@ Enable REGEXP Custom.
 
 Press "Scan"
 
-<CLI>
+*CLI
 
 $node jspwn -t <path/to/app>
+
+Note: Output is automatic generated
 
 Custom Scanning
 ======
