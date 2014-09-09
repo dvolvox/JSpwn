@@ -29,7 +29,11 @@ Example
 
 *GUI
 
-Open app: node server.js.
+[1]$ cd jspwn-master
+
+[2]$ npm install
+
+[3]$ node server.js.
 
 Go to: http://localhost:4000/client/#/scan.
 
