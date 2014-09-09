@@ -24,7 +24,7 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-//module.exports = analyze:function();
+var esprima = require(__dirname + '/common/esprima.js');
 
 real_func_names = [];
 real_func_call = [];
@@ -58,7 +58,6 @@ function analyze(editorValue) {
   //Global Variables	
   anon_func_names = [];
 
-  var d = document;
   var code = editorValue; //alert(code);
   var result = esprima.parse(code, options);
   var str_result = JSON.stringify(result, adjustRegexLiteral, 4);
@@ -1998,4 +1997,4 @@ function getFunctions(node) {
   }
 }
 
-var reportOutput = '<!DOCTYPE html><html dir="ltr" lang="en-US"><head id="reportHead"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta charset="utf-8"><title>JSPrime Scan Report</title><link href="scripts/lib/report/1.css" media="all" rel="stylesheet"><link href="scripts/lib/report/2.css" media="all" rel="stylesheet"><link rel="stylesheet" href="scripts/lib/custom.css"></head><body><header><div id="logo"><img src="resources/jsp_logo.png"></div></header><div id="title">static <b>javascript</b> analyzer</div><div id="output"><div class="report" data-validateurl="" id="addon-validator-suite"><div class="results"><div class="result" id="suite-results-tier-3" style=""><div class="result-header"><h4 id="extension-tests">Scan Report</h4><div id="result-summary" class="result-summary" style="visibility: visible;"></div></div><div class="tier-results tests-passed-warnings" data-tier="3" id="resultRows"></div></div></div></div></div></body></html>';
+//var reportOutput = '<!DOCTYPE html><html dir="ltr" lang="en-US"><head id="reportHead"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta charset="utf-8"><title>JSPrime Scan Report</title><link href="scripts/lib/report/1.css" media="all" rel="stylesheet"><link href="scripts/lib/report/2.css" media="all" rel="stylesheet"><link rel="stylesheet" href="scripts/lib/custom.css"></head><body><header><div id="logo"><img src="resources/jsp_logo.png"></div></header><div id="title">static <b>javascript</b> analyzer</div><div id="output"><div class="report" data-validateurl="" id="addon-validator-suite"><div class="results"><div class="result" id="suite-results-tier-3" style=""><div class="result-header"><h4 id="extension-tests">Scan Report</h4><div id="result-summary" class="result-summary" style="visibility: visible;"></div></div><div class="tier-results tests-passed-warnings" data-tier="3" id="resultRows"></div></div></div></div></div></body></html>';
