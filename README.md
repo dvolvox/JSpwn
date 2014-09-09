@@ -25,6 +25,8 @@ With the engine of ScanJS to detect vulnerabilities and the code flux feature of
 Example
 =====
 
+<GUI>
+
 Open app: node server.js.
 
 Go to: http://localhost:4000/client/#/scan.
@@ -33,8 +35,11 @@ Select File from folder.
 
 Enable REGEXP Custom.
 
-<Scan>
+Press "Scan"
 
+<CLI>
+
+$node jspwn -t <path/to/app>
 
 Custom Scanning
 ======
@@ -52,3 +57,4 @@ Attack-vector: scanctrl.js:900
 Future Features
 ======
 > Developing a browser extension for JSpwn
+> Adding arguments for JSON output or HTML output in CLI version
