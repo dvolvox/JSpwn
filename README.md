@@ -66,5 +66,3 @@ Attack-vector: scanctrl.js:900
 Future Features
 ======
 > Developing a browser extension for JSpwn
-
-> Adding arguments for JSON output or HTML output in CLI version
