@@ -45,7 +45,8 @@ Press "Scan"
 
 *CLI
 
-$node jspwn -t <path/to/app>
+Usage: $node jspwn.js -t [path/to/app] -j [for json output]
+
 
 Note: Output is automatic generated
 
