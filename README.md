@@ -22,12 +22,18 @@ This tool allow the developers to detect Sinks And Sources of their Applications
 
 With the engine of ScanJS to detect vulnerabilities and the code flux feature of JSprime, this app has the compatibility of detect the vulnerabilities point and backtrack the code.
 
+Video: https://www.youtube.com/watch?v=RWE3852ubH0&
+
 Example
 =====
 
 *GUI
 
-Open app: node server.js.
+[1]$ cd jspwn-master
+
+[2]$ npm install
+
+[3]$ node server.js.
 
 Go to: http://localhost:4000/client/#/scan.
 
