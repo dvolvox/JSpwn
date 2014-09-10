@@ -25,7 +25,7 @@ scanjsModule.controller('ScanCtrl', ['$scope', 'ScanSvc', function ScanCtrl($sco
     |_|  |_|  |_|______|_|  |_|     \/_/    \_\_|  \_\_____/ 
   */
 
-  $scope.codeMirrorManual = undefined;
+  $codeMirrorManual = undefined;
   $scope.inputFiles = [];
   $scope.results=[];
   $scope.errors=[];
@@ -161,7 +161,7 @@ scanjsModule.controller('ScanCtrl', ['$scope', 'ScanSvc', function ScanCtrl($sco
     document.querySelector("#scan-results").classList.toggle("hidden", true);
     document.querySelector("#scan-output-rules").classList.toggle("hidden", true);
     document.querySelector("#scan-output-files").classList.toggle("hidden", true);
-    document.querySelector("regex-wrapper").classList.toggle("hidden", true);
+    document.querySelector("#regex-wrapper").classList.toggle("hidden", true);
     document.querySelector("#custom").classList.toggle("hidden",true);
     document.querySelector("#tabsforall").classList.toggle("hidden", true);
     document.querySelector("#backtrackdiv").classList.toggle("hidden", true);
