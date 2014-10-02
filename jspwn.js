@@ -5,7 +5,7 @@ var fs = require('fs');
 eval(fs.readFileSync(__dirname + '/common/analyzer.js') + '');
 eval(fs.readFileSync(__dirname + '/common/engine.js') + '');
 
-var argv = require('optimist').usage('Usage: $node jspwn.js -t [path/to/app] -j [for json output]').demand(['t']).argv;
+var argv = require('optimist').usage('Usage: $node jspwn.js -t [path/to/app] -o [for json output]').demand(['t']).argv;
 
 var results = {};
 var dir= argv.t;
