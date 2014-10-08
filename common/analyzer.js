@@ -1,32 +1,7 @@
-/*
-JSPrime v0.1 beta
-=================
-The MIT License (MIT)
-
-Copyright (c) 2013 Nishant Das Patnaik (nishant.dp@gmail.com)
-Copyright (c) 2013 Sarathi Sabyasachi Sahoo (sarathisahoo@gmail.com)
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
-var sinkWithConstantParam = ["eval","globalEval"];
+var source = ["location"];
+var sink = ["document.write", "eval", "innerHTML", "location.replace"];
+var sinkWithConstantParam = ["eval"];
 var conditionalSink = [".setAttribute(href|src"];
-var positiveSource = ["decodeURIComponent"];
-var negativeSource = ["encodeURIComponent", "Y.Escape.html","text"];
 var blackList = [];
 var blackListObj = [];
 var semiBlackList = [];
@@ -34,10 +9,7 @@ var semiSource = [];
 var redLine = [];
 var isXSS = false;
 var sourceData = [];
-var resultData = [];
-var resultColor = [];
 var sourceDataOld = [];
-var sourceDataToExecute = [];
 var isSource = true;
 var sinkResultArguments = [];
 var sinkResultArgumentsObj = [];
@@ -45,16 +17,22 @@ var sourceList = [];
 var sourceListObj = [];
 var sourceListNames = [];
 var convertedFunction = [];
-var aOrange = [];
-var aOrangeData = "";
-var aRedData = "";
-var aOtherData = "";
 var win;
 
-function analyzeArrays(editorValue) {
-  //console.log(JSON.stringify(sink));	
-  //win = window.open("report.html", '_blank');
-  //win.document.write(reportOutput);
+var startScope = [];
+var endScope = [];
+
+var res;
+
+exports.sink = sink;
+exports.convertedFunction = convertedFunction;
+exports.analyzeArrays = analyzeArrays;
+exports.sinkWithConstantParam = sinkWithConstantParam;
+exports.clear_vars = clear_vars;
+
+var rst = [];
+
+function clear_vars(){
   blackList = [];
   blackListObj = [];
   semiBlackList = [];
@@ -62,10 +40,7 @@ function analyzeArrays(editorValue) {
   redLine = [];
   isXSS = false;
   sourceData = [];
-  resultData = [];
-  resultColor = [];
   sourceDataOld = [];
-  sourceDataToExecute = [];
   isSource = true;
   sinkResultArguments = [];
   sinkResultArgumentsObj = [];
@@ -73,30 +48,40 @@ function analyzeArrays(editorValue) {
   sourceListObj = [];
   sourceListNames = [];
   convertedFunction = [];
-  aOrange = [];
-  aOrangeData = "";
-  aRedData = "";
-  aOtherData = "";
-  var sData = editorValue;
-  sourceDataToExecute = sData.split(/\n\r?/g);
-  sData = htmlEncode(sData);
+  startScope = [];
+  endScope = [];
+}
+
+function analyzeArrays(var1, var2, var3, var4, var5, var6, var7, sData, response) {
+  
+  var real_func_names = [];
+  var real_func_call = [];
+  var real_variable_const = [];
+  var real_variable_var = [];
+  var real_variable_obj = [];
+
+  real_func_names = var1;
+  real_func_call = var2;
+  real_variable_const = var3;
+  real_variable_var = var4;
+  real_variable_obj = var5;
+  startScope = var6;
+  endScope = var7;
+  res = response;
+
+  //console.log(JSON.stringify(sink));
+  //win=window.open("result.html", '_blank');
+  //var sData=document.getElementById('editor').value;
+  //sData=htmlEncode(sData);
 
   sourceData = sData.split(/\n\r?/g);
   sourceDataOld = sData.split(/\n\r?/g);
-
-  //win.document.write("<script>try{\n");
-  //win.document.write(editorValue + "\n}catch(err5){}</script>");
-  //win.document.writeln('<script src="execute.js"></script>');
-
-  parseJavascriptNativeFunction();
 
   for (var i = 0; i < source.length; i++) {
     blackList = [];
     blackListObj = [];
     isXSS = false;
     isSource = true;
-    checkFunctionsWithDirectSource(source[i]);
-
     checkAsignValue(real_variable_const, source[i], source[i], null);
     checkAsignValue(real_variable_var, source[i], source[i], null);
     //checkAsignValue(real_variable_obj,source[i],source[i],null);
@@ -105,7 +90,6 @@ function analyzeArrays(editorValue) {
       checkSink();
     }
     checkSinkWithDirectSource(source[i]);
-
   }
   traverseHighLightsVariable();
   //traverseHighLightsObject();
@@ -114,12 +98,13 @@ function analyzeArrays(editorValue) {
 
   traverseHighLightsVariable();
   traverseHighLightsFunction();
-  traverseHighLightsFunctionReturn();
   //traverseHighLightsObject();
 
   removeUnusedSource();
-  console.log(JSON.stringify(blackList));
-  return writeResult();
+  //console.log(JSON.stringify(blackList));
+  //writeColorCode();
+  //writeResult();
+  return rst;
 }
 
 function htmlEncode(string) {
@@ -137,98 +122,34 @@ function htmlEncode(string) {
   });
 };
 
+function writeColorCode() {
+  res.write('<span style="background: none repeat scroll 0% 0% orange;width:300px;height:25px;">&nbsp;&nbsp;&nbsp;&nbsp;Source that reached the Sink&nbsp;&nbsp;&nbsp;&nbsp;</span>');
+  res.write('&nbsp;&nbsp;&nbsp;&nbsp;<span style="background: none repeat scroll 0% 0% yellow;width:300px;height:25px;">&nbsp;&nbsp;&nbsp;&nbsp;Active Source asigned to variables&nbsp;&nbsp;&nbsp;&nbsp;</span>');
+  res.write('&nbsp;&nbsp;&nbsp;&nbsp;<span style="background: none repeat scroll 0% 0% LightPink;width:300px;height:25px;">&nbsp;&nbsp;&nbsp;&nbsp;Active Source passed through a function&nbsp;&nbsp;&nbsp;&nbsp;</span>');
+  res.write('&nbsp;&nbsp;&nbsp;&nbsp;<span style="background: none repeat scroll 0% 0% BurlyWood;width:300px;height:25px;">&nbsp;&nbsp;&nbsp;&nbsp;Source that missed the Sink&nbsp;&nbsp;&nbsp;&nbsp;</span>');
+  res.write('&nbsp;&nbsp;&nbsp;&nbsp;<span style="background: none repeat scroll 0% 0% grey;width:300px;height:25px;">&nbsp;&nbsp;&nbsp;&nbsp;Non-Active Source asigned to variables&nbsp;&nbsp;&nbsp;&nbsp;</span>');
+  res.write('&nbsp;&nbsp;&nbsp;&nbsp;<span style="background: none repeat scroll 0% 0% red;width:300px;height:25px;">&nbsp;&nbsp;&nbsp;&nbsp;Active Source reached the Sink&nbsp;&nbsp;&nbsp;&nbsp;</span>');
+}
+
 function writeResult() {
-  var hiddenValues = "<input type='hidden' id='aOrangeData' value='" + aOrangeData + "' />";
-  hiddenValues += "<input type='hidden' id='aRedData' value='" + aRedData + "' />";
-  hiddenValues += "<input type='hidden' id='aOtherData' value='" + aOtherData + "' />";
-  hiddenValues += "<input type='hidden' id='aSink' value='" + sink + "' />";
-  hiddenValues += "<input type='hidden' id='aSource' value='" + source + "' />";
+  res.write("</br></br>FULL CODE</br>------------------</br></br>");
 
-  //var resultDiv = win.document.getElementById('output');
-  //resultDiv.innerHTML = resultDiv.innerHTML + hiddenValues;
-  //win.document.getElementById('result-summary').innerHTML = "<input type='button' value='Dynamic Execute' onclick='executeJSPrime()'></input>";
-
-  var resultRow = [];
-  for (var i = 0; i < resultData.length; i++) {
-    var redIndex = resultColor.indexOf('red');
-    if (resultColor[i] == '#FF00FF' && redIndex < i && redIndex != -1) {
-      var temp = resultColor[i];
-      resultColor[i] = resultColor[redIndex];
-      resultColor[redIndex] = temp;
-
-      var temp = resultData[i];
-      resultData[i] = resultData[redIndex];
-      resultData[redIndex] = temp;
-
-    }
+  for (var i = 0; i < sourceData.length; i++) {
+    res.write((i + 1) + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + sourceData[i] + "</br>");
   }
-  for (var i = 0; i < resultData.length; i++) {
-    var aResultData = resultData[i].split('#LINE#');
-    resultRow.push([aResultData[1],resultColor[i]]);
-  }
-  return resultRow;
-  //win.document.getElementById('resultRows').innerHTML = resultRow;
-  //win.document.close();
-
 }
 
 function doHighlight(color, line) {
-  if (color == "orange")
-    aOrangeData += line + ",";
-  else if (color == "red")
-    aRedData += line + ",";
-  else if (color == "#FF00FF" || color == "yellow")
-    aOtherData += line + ",";
-
-  if (resultData.indexOf(sourceDataOld[line - 1] + "#LINE#" + (line)) == -1) {
-    resultData.push(sourceDataOld[line - 1] + "#LINE#" + (line));
-    resultColor.push(color);
-  } else {
-    resultColor[resultData.indexOf(sourceDataOld[line - 1] + "#LINE#" + (line))] = color;
-  }
-}
-
-function getColorTextHeader(color) {
-  if (color == "orange")
-    return 'Active Source';
-  if (color == "yellow")
-    return 'Active Variable';
-  if (color == "grey")
-    return 'Non-Active Variable';
-  if (color == "BurlyWood")
-    return 'Non-Active Source';
-  if (color == "#FF00FF")
-    return 'Active Function';
-  if (color == "red")
-    return 'Active Sink';
-  else
-    return '';
-}
-
-function getColorTextDesc(color) {
-  if (color == "orange")
-    return 'Active Source is passed which is reached to the sink later';
-  if (color == "yellow")
-    return 'Active Source is passed through the variable';
-  if (color == "grey")
-    return 'Source is passed through the variable which could not reach to the sink';
-  if (color == "BurlyWood")
-    return 'Source that could not reach to the sink';
-  if (color == "#FF00FF")
-    return 'Source is passed through the function';
-  if (color == "red")
-    return 'XSS Found - Source reached to the sink';
-  else
-    return '';
+  rst.push([color,line]);
+  sourceData[line - 1] = '<span style="background: none repeat scroll 0% 0% ' + color + ';">' + sourceDataOld[line - 1] + "</span>";
+  //win.document.writeln(sourceData[line-1]+" ---- "+(line-1)+"</br>");
 }
 
 function traverseHighLightsVariable() {
   for (var i = 0; i < real_variable_var.length; i++) {
     for (var j = 0; j < sinkResultArguments.length; j++) {
       if (sinkResultArguments[j] == real_variable_var[i].name && sourceListNames.indexOf(sinkResultArguments[j]) == -1) {
-        if (aOrange.indexOf(real_variable_var[i].line) == -1) {
-          doHighlight("yellow", real_variable_var[i].line);
-        }
+        doHighlight("yellow", real_variable_var[i].line);
         var args = real_variable_var[i].value.split("+");
         var isSink = false;
         for (var k = 0; k < args.length; k++) {
@@ -283,12 +204,10 @@ function traverseHighLightsFunctionCall(funcName, varName, pos) {
   for (var i = 0; i < real_func_call.length; i++) {
     if (real_func_call[i].name == funcName) {
       if (redLine.indexOf(real_func_call[i].line) == -1) {
-        if (aOrange.indexOf(real_func_call[i].line) == -1) {
-          doHighlight("#FF00FF", real_func_call[i].line);
-        }
+        doHighlight("LightPink", real_func_call[i].line);
         for (var j = 0; j < convertedFunction.length; j++) {
           if (convertedFunction[j].name == real_func_call[i].name && convertedFunction[j].startScope == real_func_call[i].startScope && convertedFunction[j].endScope == real_func_call[i].endScope) {
-            doHighlight("#FF00FF", convertedFunction[j].line);
+            doHighlight("LightPink", convertedFunction[j].line);
             traverseConvertedFunction(convertedFunction[j]);
           }
         }
@@ -305,7 +224,7 @@ function traverseHighLightsFunctionCall(funcName, varName, pos) {
 function traverseConvertedFunction(obj) {
   for (var i = 0; i < convertedFunction.length; i++) {
     if (obj.value == convertedFunction[i].name && obj.startScope == convertedFunction[i].startScope && obj.endScope == convertedFunction[i].endScope) {
-      doHighlight("#FF00FF", convertedFunction[i].line);
+      doHighlight("LightPink", convertedFunction[i].line);
       traverseConvertedFunction(convertedFunction[i]);
     }
   }
@@ -313,15 +232,12 @@ function traverseConvertedFunction(obj) {
 
 function traverseHighLightsFunctionReturn() {
   for (var i = 0; i < real_func_names.length; i++) {
-    for (var k = 0; k < real_func_names[i].returns.variables.length; k++) {
-      if (real_func_names[i].returns.variables[k] != undefined) {
-        var returnValue = real_func_names[i].returns.variables[k];
-        for (var j = 0; j < sinkResultArguments.length; j++) {
-
-          if (sinkResultArguments[j] == real_func_names[i].name && sinkResultArguments.indexOf(returnValue) == -1) {
-            sinkResultArguments.push(returnValue);
-            sinkResultArgumentsObj.push(real_func_names[i]);
-          }
+    if (real_func_names[i].returns.variables[0] != undefined) {
+      var returnValue = real_func_names[i].returns.variables[0];
+      for (var j = 0; j < sinkResultArguments.length; j++) {
+        if (sinkResultArguments[j] == real_func_names[i].name && sinkResultArguments.indexOf(returnValue) == -1) {
+          sinkResultArguments.push(returnValue);
+          sinkResultArgumentsObj.push(real_func_names[i]);
         }
       }
     }
@@ -330,17 +246,12 @@ function traverseHighLightsFunctionReturn() {
 }
 
 function removeUnusedSource() {
-  var orangeLine = [];
   for (var i = 0; i < sourceList.length; i++) {
     var isSink = false;
     var line;
     var sinkObj = sourceList[i].split("#line#");
     line = sinkObj[1];
-    line = parseInt(line);
     for (var j = 0; j < sinkResultArguments.length; j++) {
-      if (sinkResultArguments[j] == null)
-        continue;
-
       var aVal = sinkResultArguments[j].split(".");
       var sinkVal = "";
       for (var k = 0; k < aVal.length; k++) {
@@ -378,13 +289,8 @@ function removeUnusedSource() {
         }
       }
     }
-    if (isSink == false && redLine.indexOf(line) == -1) {
+    if (isSink == false) {
       doHighlight("BurlyWood", line);
-    } else {
-      orangeLine.push(line);
-    }
-    if (orangeLine.indexOf(line) != -1 && redLine.indexOf(line) == -1) {
-      doHighlight("orange", line);
     }
   }
 }
@@ -392,21 +298,13 @@ function removeUnusedSource() {
 function checkAsignValue(obj, source, actualSource, sourceObj) {
   for (var i = 0; i < obj.length; i++) {
     if (obj[i].value != undefined) {
-      if (negativeSource.indexOf(obj[i].value) != -1) {
-        obj[i].negativeSource = 1;
-      }
-      if (sourceObj) {
-        if (sourceObj.negativeSource2 == 1 && positiveSource.indexOf(sourceObj.name) == -1) {
-          obj[i].negativeSource = 1;
-        }
-      }
       var multipleValue = obj[i].value.split("+");
       var isPass = false;
 
       for (var j = 0; j < multipleValue.length; j++) {
         var aVal = multipleValue[j].split(".");
         for (var k = 0; k < aVal.length; k++) {
-          if ((semiSource.indexOf(aVal[k]) != -1 || blackList.indexOf(aVal[k]) != -1) && sourceObj != null) {
+          if (semiSource.indexOf(aVal[k]) != -1 && sourceObj != null) {
             semiSource.push(obj[i].name);
             isPass = true;
             break;
@@ -472,9 +370,7 @@ function checkAsignValue(obj, source, actualSource, sourceObj) {
             sourceListObj.push(obj[i]);
             semiSource.push(obj[i].name);
           } else {
-            if (aOrange.indexOf(obj[i].line) == -1) {
-              doHighlight("grey", obj[i].line);
-            }
+            doHighlight("grey", obj[i].line);
           }
 
           isSource = false;
@@ -498,50 +394,16 @@ function checkFunctionCallee(val, actualSource, sourceObj) {
       for (var k = 0; k < args.length; k++) {
         if (args[k] == val) {
           checkPassValueToFunction(real_func_call[i].name, args[k], j, actualSource, sourceObj);
-          if (real_func_call[i - 1]) {
-            sourceObj.value = real_func_call[i - 1].name;
-            checkRecursiveFunctionCallee(real_func_call[i - 1], real_func_call[i], actualSource, sourceObj, real_func_call, i);
-          }
-        }
-
-      }
-    }
-  }
-}
-
-function checkRecursiveFunctionCallee(func, func2, actualSource, sourceObj, realFunc, pos) {
-  var doRepeat = false;
-  for (var j1 = 0; j1 < func.arguments.variables.length; j1++) {
-
-    if (func.arguments.variables[j1] != undefined) {
-
-      var args2 = func.arguments.variables[j1].split("+");
-
-      for (var k1 = 0; k1 < args2.length; k1++) {
-        var aVal = args2[k1].split(".");
-
-        if (aVal[0] == func2.name) {
-          doRepeat = true;
-          checkPassValueToFunction(func.name, aVal[0], j1, actualSource, sourceObj);
-          break;
         }
       }
-    }
-  }
-  if (doRepeat == true) {
-    pos--;
-    if (realFunc[pos - 1]) {
-      checkRecursiveFunctionCallee(realFunc[pos - 1], realFunc[pos], actualSource, sourceObj, realFunc, pos);
     }
   }
 }
 
 function checkPassValueToFunction(name, val, pos, actualSource, sourceObj) {
   for (var i = 0; i < real_func_names.length; i++) {
+
     if (name == real_func_names[i].name) {
-      if (sourceObj.negativeSource == 1 && positiveSource.indexOf(real_func_names[i].name) == -1) {
-        real_func_names[i].negativeSource2 = 1;
-      }
       blackList.push(real_func_names[i].arguments.variables[pos]);
       blackListObj.push(real_func_names[i]);
       //checkAsignValue(real_variable_obj,real_func_names[i].arguments.variables[pos],actualSource,sourceObj);
@@ -552,19 +414,16 @@ function checkPassValueToFunction(name, val, pos, actualSource, sourceObj) {
 
 function checkFunctionReturnValue(val, actualSource, sourceObj) {
   for (var i = 0; i < real_func_names.length; i++) {
-    for (var k = 0; k < real_func_names[i].returns.variables.length; k++) {
-      var returnValue = "";
-      if (real_func_names[i].returns.variables[k] != undefined) {
-        returnValue = real_func_names[i].returns.variables[k];
-      }
-      if (returnValue != "") {
-        aVal = returnValue.split(".");
-        if (blackList.indexOf(aVal[0]) != -1 && blackList.indexOf(real_func_names[i].name) == -1) {
-          blackList.push(real_func_names[i].name);
-          blackListObj.push(real_func_names[i]);
-          //checkAsignValue(real_variable_obj,real_func_names[i].name,actualSource,real_func_names[i]);
-          checkAsignValue(real_variable_var, real_func_names[i].name, actualSource, real_func_names[i]);
-        }
+    var returnValue = "";
+    if (real_func_names[i].returns.variables[0] != undefined) {
+      returnValue = real_func_names[i].returns.variables[0];
+    }
+    if (returnValue != "") {
+      if (blackList.indexOf(returnValue) != -1 && blackList.indexOf(real_func_names[i].name) == -1) {
+        blackList.push(real_func_names[i].name);
+        blackListObj.push(real_func_names[i]);
+        //checkAsignValue(real_variable_obj,real_func_names[i].name,actualSource,real_func_names[i]);
+        checkAsignValue(real_variable_var, real_func_names[i].name, actualSource, real_func_names[i]);
       }
     }
   }
@@ -579,21 +438,13 @@ function checkSinkWithDirectSource(source) {
           var args = real_func_call[j].arguments.variables[k].split("+");
           for (var l = 0; l < args.length; l++) {
             if (args[l].indexOf(source) != -1) {
-              if (real_func_call[j].startLine) {
-                for (var lineCount = parseInt(real_func_call[j].startLine); lineCount <= parseInt(real_func_call[j].endLine); lineCount++) {
-                  doHighlight("red", lineCount);
-                  redLine.push(lineCount);
-                }
-              } else {
-                doHighlight("red", real_func_call[j].line);
-                redLine.push(real_func_call[j].line);
-              }
+              doHighlight("red", real_func_call[j].line);
               isXSS = true;
             }
           }
         }
 
-        if (sinkWithConstantParam && (sinkWithConstantParam.indexOf(sink[i]) != -1)) {
+        if (sinkWithConstantParam.indexOf(sink[i]) != -1) {
           for (var k = 0; k < real_func_call[j].arguments.literals.length; k++) {
             var args = real_func_call[j].arguments.literals[k].split("+");
             for (var l = 0; l < args.length; l++) {
@@ -626,67 +477,6 @@ function checkSinkWithDirectSource(source) {
   }
 }
 
-function checkFunctionsWithDirectSource(source) {
-  for (var j = 0; j < real_func_call.length; j++) {
-    for (var k = 0; k < real_func_call[j].arguments.variables.length; k++) {
-      var args = (real_func_call[j].arguments.variables[k] || "").split("+");
-      for (var l = 0; l < args.length; l++) {
-        if (args[l].indexOf(source) != -1) {
-          for (var l2 = 0; l2 < real_variable_var.length; l2++) {
-            if (real_variable_var[l2].line == real_func_call[j].line) {
-              doHighlight("orange", real_variable_var[l2].line);
-              aOrange.push(real_variable_var[l2].line);
-
-              var newFunction = clone(real_variable_var[l2]);
-              newFunction.name = args[l];
-              real_variable_var.push(newFunction);
-              blackList.push(newFunction.name);
-              blackListObj.push(newFunction);
-
-              sourceList.push(real_variable_var[l2].name + "#line#" + newFunction.line);
-              sourceListNames.push(newFunction.name);
-              sourceListObj.push(newFunction);
-              semiSource.push(newFunction.name);
-              checkFunctionCallee(newFunction.name, newFunction.name, newFunction);
-              checkFunctionReturnValue(newFunction.name, newFunction.name, newFunction);
-              break;
-            }
-          }
-          for (var j1 = 0; j1 < real_func_names.length; j1++) {
-            if (real_func_names[j1].name == real_func_call[j].name && real_func_names[j1].arguments.variables[l]) {
-              doHighlight("orange", real_func_call[j].line);
-              aOrange.push(real_func_call[j].line);
-
-              blackList.push(args[l]);
-              blackListObj.push(real_func_call[j]);
-              blackList.push(real_func_names[j1].arguments.variables[l]);
-              blackListObj.push(real_func_call[j]);
-              break;
-            }
-          }
-        }
-        checkSourceRecursionInFunction(args[l], real_func_call[j]);
-      }
-    }
-  }
-}
-
-function checkSourceRecursionInFunction(funcName, funcCall) {
-  for (var m = 0; m < real_func_names.length; m++) {
-    if (funcName == real_func_names[m].name) {
-      for (var m2 = 0; m2 < real_func_names[m].returns.variables.length; m2++) {
-        funcCall.arguments.variables.push(real_func_names[m].returns.variables[m2]);
-      }
-      for (var m4 = 0; m4 < real_func_call.length; m4++) {
-        if (funcName == real_func_call[m4].name) {
-          funcName = real_func_call[m4].arguments.variables[0];
-          checkSourceRecursionInFunction(funcName, funcCall);
-        }
-      }
-    }
-  }
-}
-
 function checkSink() {
   for (var i = 0; i < sink.length; i++) {
     for (var j = 0; j < blackList.length; j++) {
@@ -703,10 +493,6 @@ function checkSink() {
 }
 
 function checkInFunctionCall(sink, val, sinkObj) {
-  if (sinkObj.negativeSource == 1 || sinkObj.negativeSource2 == 1) {
-    return;
-  }
-
   var conditionalSinkObj = sink.split("(");
   sink = conditionalSinkObj[0];
 
@@ -716,29 +502,12 @@ function checkInFunctionCall(sink, val, sinkObj) {
         for (var j = 0; j < real_func_call[i].arguments.variables.length; j++) {
           var args = real_func_call[i].arguments.variables[j].split("+");
           for (var k = 0; k < args.length; k++) {
-
-            for (var j1 = 0; j1 < real_func_call.length; j1++) {
-              if (real_func_call[j1].name == args[k] && real_func_call[j1].line == real_func_call[i].line) {
-                for (var t = 0; t < real_func_call[j1].returns.variables.length; t++) {
-                  var returnValue = real_func_call[j1].returns.variables[t];
-                  if (blackList.indexOf(returnValue) != -1) {
-                    doHighlight("red", real_func_call[i].line);
-                    redLine.push(real_func_call[i].line);
-                    sinkResultArguments.push(returnValue);
-                    sinkResultArgumentsObj.push(real_func_call[i]);
-                    isXSS = true;
-                    break;
-                  }
-                }
-              }
-            }
-
             if (args[k] == val) {
               var isScope = true;
               for (var p = 0; p < real_variable_var.length; p++) {
                 if (real_variable_var[p].line <= real_func_call[i].line && real_variable_var[p].line > sinkObj.line) {
                   if (real_variable_var[p].name == args[k]) {
-                    var obj = real_variable_var[p].value.split(".");
+                    var obj = real_variable_var[p].value.split(".")
                     if (obj[0] != real_variable_var[p].name && blackList.indexOf(obj[0]) == -1) {
                       isScope = false;
                       break;
@@ -815,7 +584,7 @@ function checkInFunctionCall(sink, val, sinkObj) {
             }
           }
         }
-        if (sinkWithConstantParam && (sinkWithConstantParam.indexOf(sink) != -1)) {
+        if (sinkWithConstantParam.indexOf(sink) != -1) {
           for (var j = 0; j < real_func_call[i].arguments.literals.length; j++) {
             var args = real_func_call[i].arguments.literals[j].split("+");
             for (var k = 0; k < args.length; k++) {
@@ -835,9 +604,6 @@ function checkInFunctionCall(sink, val, sinkObj) {
 }
 
 function checkInAssignToSink(sink, val, sinkObj) {
-  if (sinkObj.negativeSource == 1 || sinkObj.negativeSource2 == 1) {
-    return;
-  }
   for (var i = 0; i < real_variable_var.length; i++) {
     if (real_variable_var[i].name.indexOf(sink) != -1) {
       var multipleValue = real_variable_var[i].value.split("+");
@@ -855,11 +621,9 @@ function checkInAssignToSink(sink, val, sinkObj) {
                 }
               }
 
-              if (sinkObj == real_variable_var[p] && !(sinkObj.startScope == real_variable_var[p].startScope && sinkObj.endScope == real_variable_var[p].endScope)) {
+              if (sinkObj != real_variable_var[p] && !(sinkObj.startScope == real_variable_var[p].startScope && sinkObj.endScope == real_variable_var[p].endScope)) {
                 isScope = false;
               } else {
-                sinkResultArguments.push(real_variable_var[p].name);
-                sinkResultArgumentsObj.push(real_variable_var[p]);
                 isScope = true;
               }
             }
@@ -868,7 +632,6 @@ function checkInAssignToSink(sink, val, sinkObj) {
             }
           }
           if (isScope == true) {
-            var isScope2 = false;
             for (var k = 0; k < real_func_names.length; k++) {
               if (real_func_names[k].line == real_variable_var[i].startScope || real_func_names[k].line == (real_variable_var[i].startScope - 1)) {
                 for (var p = 0; p < real_func_names[k].arguments.variables.length; p++) {
@@ -883,7 +646,6 @@ function checkInAssignToSink(sink, val, sinkObj) {
                       for (var x = 0; x < real_func_call[p].arguments.variables.length; x++) {
                         if (blackList.indexOf(real_func_call[p].arguments.variables[x]) != -1) {
                           isScope = true;
-                          isScope2 = true;
                           sinkResultArguments.push(real_func_call[p].arguments.variables[x]);
                           sinkResultArgumentsObj.push(real_func_call[p]);
                         }
@@ -891,9 +653,6 @@ function checkInAssignToSink(sink, val, sinkObj) {
                     }
                   }
                 }
-              }
-              if (isScope2 == true) {
-                break;
               }
             }
           }
@@ -913,27 +672,6 @@ function checkInAssignToSink(sink, val, sinkObj) {
           break;
         }
       }
-    }
-  }
-}
-
-function parseJavascriptNativeFunction() {
-  for (var i = 0; i < real_variable_var.length; i++) {
-    var val = real_variable_var[i].value;
-    var aVal = val.split(".")
-    for (var j = 0; j < aVal.length; j++) {
-      if (aVal[j] == "reverse") {
-        parseJavascriptNativeFunctionReverse(aVal[0]);
-      }
-    }
-  }
-}
-
-function parseJavascriptNativeFunctionReverse(name) {
-  for (var i = 0; i < real_variable_const.length; i++) {
-    if (real_variable_const[i].name == name) {
-      var data = real_variable_const[i].value.split("").reverse().join("");
-      real_variable_const[i].value = data;
     }
   }
 }

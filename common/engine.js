@@ -1,41 +1,9 @@
-/*
-JSPrime v0.1 beta
-=================
-The MIT License (MIT)
+var analyzer = require('./analyzer.js');
 
-Copyright (c) 2013 Nishant Das Patnaik (nishant.dp@gmail.com)
-Copyright (c) 2013 Sarathi Sabyasachi Sahoo (sarathisahoo@gmail.com)
+var convertedFunction = analyzer.convertedFunction;
+var sinkWithConstantParam = analyzer.sinkWithConstantParam;
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-*/
-
-var esprima = require(__dirname + '/common/esprima.js');
-
-real_func_names = [];
-real_func_call = [];
-real_variable_const = [];
-real_variable_var = [];
-real_variable_obj = [];
-real_func_Scope = [];
-
-var startScope = [];
-var endScope = [];
-var currentObj = "";
+var ctrl_err = 0;
 
 
 options = {
@@ -46,6 +14,14 @@ options = {
   tolerant: false
 };
 
+  real_func_names = [];
+  real_func_call = [];
+  real_variable_const = [];
+  real_variable_var = [];
+  real_variable_obj = [];
+
+  var startScope = [];
+  var endScope = [];
 
 function adjustRegexLiteral(key, value) {
   if (key === 'value' && value instanceof RegExp) {
@@ -54,45 +30,40 @@ function adjustRegexLiteral(key, value) {
   return value;
 }
 
-function analyze(editorValue) {
+function analyze(str_result) {
   //Global Variables	
   anon_func_names = [];
-
-  var code = editorValue; //alert(code);
-  var result = esprima.parse(code, options);
-  var str_result = JSON.stringify(result, adjustRegexLiteral, 4);
-  //d.getElementById('result').value = str_result;
+  
+  /*
+	var d = document;
+	var code = d.getElementById('editor').value; //alert(code);
+	var result = esprima.parse(code,options);
+	var str_result = JSON.stringify(result, adjustRegexLiteral, 4);
+	//d.getElementById('result').value = str_result;
+	*/
   rslt = JSON.parse(str_result); //only for debugging purpose
 
   startScope.push(rslt.loc.start.line);
   endScope.push(rslt.loc.end.line);
-  var isPop = false;
+
   traverse(rslt, function (node) {
     //console.log(JSON.stringify(node));
     if (node.loc && node.body && (node.type == "FunctionDeclaration")) {
-      if (isPop == true && startScope.length > 1) {
-        startScope.pop();
-        endScope.pop();
-      }
-      isPop = true;
       startScope.push(node.loc.start.line);
       endScope.push(node.loc.end.line);
     }
     getFunctions(node);
     getVariables(node);
   });
-  removePrototype();
-  assignFunctionReturnValue();
-  createNativeFunctions();
+  //asignFunctionReturnValue();
 
-  //console.log("Function Name: " + JSON.stringify(real_func_names));
-  //console.log("Function Scope: " + JSON.stringify(real_func_Scope));
-  //console.log("Function call: " + JSON.stringify(real_func_call));
-  //console.log("Constant Variable value: " + JSON.stringify(real_variable_const));
-  //console.log("Dynamic Variable value: " + JSON.stringify(real_variable_var));
-  //console.log("Object Variable value: " + JSON.stringify(real_variable_obj));
+  //console.log("Function Name: "+JSON.stringify(real_func_names));
+  //console.log("Function call: "+JSON.stringify(real_func_call));
+  //console.log("Constant Variable value: "+JSON.stringify(real_variable_const));
+  //console.log("Dynamic Variable value: "+JSON.stringify(real_variable_var));
+  //console.log("Object Variable value: "+JSON.stringify(real_variable_obj));
   //console.time("time");
-  return analyzeArrays(editorValue);
+  //analyzeArrays();
   //console.timeEnd("time");
 }
 
@@ -144,27 +115,7 @@ function makeRandomName() {
   return text;
 }
 
-function removePrototype() {
-  for (var i = 0; i < real_variable_var.length; i++) {
-    real_variable_var[i].name = real_variable_var[i].name.replace(/.prototype./g, '.');
-    real_variable_var[i].name = real_variable_var[i].name.replace(/prototype./g, '.');
-    real_variable_var[i].name = real_variable_var[i].name.replace(/.prototype/g, '');
-  }
-
-  for (var i = 0; i < real_func_names.length; i++) {
-    real_func_names[i].name = real_func_names[i].name.replace(/.prototype./g, '.');
-    real_func_names[i].name = real_func_names[i].name.replace(/prototype./g, '.');
-    real_func_names[i].name = real_func_names[i].name.replace(/.prototype/g, '');
-  }
-
-  for (var i = 0; i < real_func_call.length; i++) {
-    real_func_call[i].name = real_func_call[i].name.replace(/.prototype./g, '.');
-    real_func_call[i].name = real_func_call[i].name.replace(/prototype./g, '.');
-    real_func_call[i].name = real_func_call[i].name.replace(/.prototype/g, '');
-  }
-}
-
-function assignFunctionReturnValue() {
+function asignFunctionReturnValue(sink) {
   for (var i = 0; i < real_variable_var.length; i++) {
     var val = real_variable_var[i].value;
     var name = real_variable_var[i].name;
@@ -172,54 +123,21 @@ function assignFunctionReturnValue() {
     var startScope = real_variable_var[i].startScope;
     var endScope = real_variable_var[i].endScope;
 
+    var latestSinks = [];
+   
     for (var j = 0; j < real_func_names.length; j++) {
-      var isDuplicateFunction = false;
-
-      if (real_variable_var[i].name == real_func_names[j].name) {
-        var objName = real_variable_var[i].name.split(".");
-        for (var j1 = 0; j1 < real_func_call.length; j1++) {
-          if (real_func_call[j1].name == real_func_names[j].name) {
-            for (var t = 0; t < real_func_names[j].returns.variables.length; t++) {
-              var returnValue = (real_func_names[j].returns.variables[t] || "").replace("#THIS#", objName[0]);
-              real_func_call[j1].returns.variables.push(returnValue);
-            }
-          }
-        }
-      }
-
+      
       if (val == real_func_names[j].name) {
-        for (var j1 = 0; j1 < real_func_call.length; j1++) {
-          if (real_func_names[j].name == real_func_call[j1].name) {
-            if (real_func_call[j1].line == real_variable_var[i].line) {
-              isDuplicateFunction = true;
-            }
-          }
-        }
-        if (isDuplicateFunction == true) {
-          //var objName=real_variable_var[i].name.split(".");
-          var objName = real_func_names[j].name.split(".");
+        if (real_variable_var[i].startScope >= real_func_names[j].startScope && real_variable_var[i].endScope <= real_func_names[j].endScope) {
+          var objName = real_variable_var[i].name.split(".");
           for (var t = 0; t < real_func_names[j].returns.variables.length; t++) {
-            if (real_func_names[j].returns.variables[t] != undefined) {
-               var returnValue = real_func_names[j].returns.variables[t].replace("#THIS#", objName[0]);
-               real_variable_var[i].value = returnValue;
+            var returnValue = (real_func_names[j].returns.variables[t] || "").replace("#THIS#", objName[0]);
+            real_variable_var[i].value = returnValue;
 
-              for (var i1 = 0; i1 < real_func_Scope.length; i1++) {
-                if (real_func_Scope[i1].name == real_func_names[j].name) {
-                  for (var i2 = 0; i2 < real_variable_var.length; i2++) {
-                    if (real_variable_var[i2].name == returnValue && real_variable_var[i2].line >= real_func_Scope[i1].startScope && real_variable_var[i2].line <= real_func_Scope[i1].endScope) {
-                      real_variable_var[i2].startScope = real_variable_var[i].startScope;
-                      real_variable_var[i2].endScope = real_variable_var[i].endScope;
-                      break;
-                    }
-                  }
-                }
-              }
-              
-              for (var k = 0; k < sink.length; k++) {
-                if (returnValue.indexOf(sink[k]) != -1) {
-                  sink.push(real_variable_var[i].name);
-                  real_variable_var[i].name = "#CHANGED_TO_SINK#";
-                }
+            for (var k = 0; k < sink.length; k++) {
+              if (returnValue.indexOf(sink[k]) != -1) {
+                sink.push(real_variable_var[i].name);
+                real_variable_var[i].name = "#CHANGED_TO_SINK#";
               }
             }
           }
@@ -231,23 +149,21 @@ function assignFunctionReturnValue() {
               break;
             }
           }
-          if (isSink == false && isDuplicateFunction == false) {
+          if (isSink == false) {
             var newFunction = clone(real_func_names[j]);
             newFunction.name = name;
             //real_variable_var[i].name="#CHANGED_TO_FUNCTION#";
-            real_func_names.push(newFunction);
-            var newFunction2 = clone(real_variable_var[i]);
-            convertedFunction.push(newFunction2);
-            for (var k = 0; k < real_variable_var.length; k++) {
-              var objName2 = real_variable_var[k].name.split("#CHANGED_TO_SINK#");
-              var objName = objName2[0].split(".");
-              if (objName[0] == real_func_names[j].name) {
-                var newFunction = clone(real_variable_var[k]);
-                objName[0] = name;
-                newFunction.name = objName.join(".");
-                real_variable_var.push(newFunction);
-              }
-            }
+            latestSinks.push(name);
+            /*for(var idx = latestSinks.length - 1; idx > latestSinks.length - 5; idx--) {
+              if (latestSinks[idx] != name) {
+                //console.log(name);
+                break;
+              }*/
+              // normal execution
+              real_func_names.push(newFunction);
+              var newFunction2 = clone(real_variable_var[i]);
+              convertedFunction.push(newFunction2);
+            //}
           }
         }
 
@@ -255,35 +171,14 @@ function assignFunctionReturnValue() {
     }
 
     for (var j = 0; j < sink.length; j++) {
-      aVal = val.split(".");
-      if (val == sink[j] || aVal.indexOf(sink[j]) != -1) {
+      if (val == sink[j]) {
         var newFunction = clone(sink[j]);
         newFunction = name;
-        real_variable_var[i].name = real_variable_var[i].name + "#CHANGED_TO_SINK#";
+        real_variable_var[i].name = "#CHANGED_TO_SINK#";
         sink.push(newFunction);
-        if (sinkWithConstantParam.indexOf(sink[j]) != -1) {
+        if (sinkWithConstantParam && (sinkWithConstantParam.indexOf(sink[j]) != -1)) {
           sinkWithConstantParam.push(newFunction);
         }
-      }
-    }
-  }
-
-  for (var i = 0; i < real_variable_var.length; i++) {
-    for (var j = 0; j < real_func_names.length; j++) {
-      if (real_variable_var[i].name == real_func_names[j].name) {
-        if (real_func_names[j].returns.functions.length > 0) {
-          var newFunction = clone(real_variable_var[i]);
-          newFunction.name = real_func_names[j].returns.functions[0];
-          sink.push(real_variable_var[i].name);
-
-          for (var k = 0; k < real_func_names[j].returns.variables.length; k++) {
-            newFunction.arguments.variables.push(real_func_names[j].returns.variables[k]);
-          }
-          real_variable_var.push(newFunction);
-        }
-      }
-      if (real_variable_var[i].value == real_func_names[j].name) {
-        checkFunctionAsReturns(real_variable_var[i], real_func_names[j]);
       }
     }
   }
@@ -294,77 +189,11 @@ function assignFunctionReturnValue() {
         if (real_func_names[j].returns.functions.length > 0) {
           var newFunction = clone(real_func_call[i]);
           newFunction.name = real_func_names[j].returns.functions[0];
-          sink.push(real_func_call[i].name);
 
           for (var k = 0; k < real_func_names[j].returns.variables.length; k++) {
             newFunction.arguments.variables.push(real_func_names[j].returns.variables[k]);
           }
           real_func_call.push(newFunction);
-        }
-      }
-    }
-  }
-}
-
-function createNativeFunctions() {
-  for (var i = 0; i < real_func_call.length; i++) {
-    var isFunctionDefined = false;
-
-    for (var j = 0; j < real_func_names.length; j++) {
-      if (real_func_call[i].name == real_func_names[j].name) {
-        isFunctionDefined = true;
-        break;
-      }
-    }
-    if (isFunctionDefined == false) {
-      var newFunction = {
-        name: '',
-        line: 0,
-        arguments: {
-          variables: [],
-          functions: [],
-          literals: [],
-        },
-        returns: {
-          variables: [],
-          literals: [],
-          functions: [],
-        }
-      };
-      newFunction.name = real_func_call[i].name;
-      newFunction.line = real_func_call[i].line;
-      var randomValue = "#RANDOM#" + makeRandomName();
-      for (var j = 0; j < real_func_call[i].arguments.variables.length; j++) {
-        newFunction.returns.variables.push(randomValue);
-        newFunction.arguments.variables.push(randomValue);
-      }
-      real_func_names.push(newFunction);
-    }
-  }
-}
-
-function checkFunctionAsReturns(varName, funcName) {
-  if (funcName.returns.variables.length > 0) {
-    for (var i = 0; i < funcName.returns.variables.length; i++) {
-      var newFunction = clone(varName);
-      newFunction.value = funcName.returns.variables[i];
-      real_variable_var.push(newFunction);
-
-      for (var j = 0; j < real_func_names.length; j++) {
-        if (real_func_names.name == newFunction.value) {
-          checkFunctionAsReturns(newFunction, real_func_names[j]);
-        }
-      }
-    }
-  }
-
-  for (var i = 0; i < real_func_call.length; i++) {
-    if (real_func_call[i].name == funcName.name) {
-      for (var j = 0; j < real_func_call[i].arguments.variables.length; j++) {
-        for (var k = 0; k < real_func_names.length; k++) {
-          if (real_func_call[i].arguments.variables[j] == real_func_names[k].name) {
-            checkFunctionAsReturns(varName, real_func_names[k]);
-          }
         }
       }
     }
@@ -509,8 +338,6 @@ function getVariables(node) {
             varVal = node2.object.name + "." + varVal;
           else
             varVal = node2.object.name;
-        } else if (node2.object.type == "ThisExpression" && currentObj != "") {
-          varVal = currentObj + "." + varVal;
         }
 
         if (node2.object.callee) {
@@ -626,7 +453,6 @@ function getVariables(node) {
 
     if (node.left.name) {
       varName = node.left.name;
-      currentObj = varName;
     } else {
       node = node.left;
       while (node.type == "MemberExpression") {
@@ -641,7 +467,6 @@ function getVariables(node) {
             varName = nodeValue + varName;
           else
             varName = nodeValue + "." + varName;
-
         }
         if (node.object.name) {
           var nodeValue = "";
@@ -653,11 +478,6 @@ function getVariables(node) {
           varName = nodeValue + "." + varName;
 
           lineNumber = node.object.loc.start.line;
-        } else if (node.object.type && currentObj != "") {
-          if (node.object.type == "ThisExpression") {
-            varName = currentObj + "." + varName;
-            lineNumber = node.object.loc.start.line;
-          }
         }
         node = node.object;
       }
@@ -988,7 +808,6 @@ function getVariables(node) {
     }
     if (node.id.name) {
       varName = node.id.name;
-      currentObj = varName;
     } else {
       node = node.id;
       while (node.type == "MemberExpression") {
@@ -1110,17 +929,8 @@ function getVariables(node) {
       };
       data.name = node.id.name;
       data.line = node.id.loc.start.line;
-      //data.startScope=startScope;
-      //data.endScope=endScope;
-      if ((startScope[startScope.length - 1] < data.line && data.line < endScope[endScope.length - 1]) || startScope.length < 2) {
-        data.startScope = startScope[startScope.length - 1];
-        data.endScope = endScope[endScope.length - 1];
-      } else {
-        startScope.pop();
-        endScope.pop();
-        data.startScope = startScope[startScope.length - 1];
-        data.endScope = endScope[endScope.length - 1];
-      }
+      data.startScope = startScope;
+      data.endScope = endScope;
       real_variable_var.push(data);
     }
   }
@@ -1142,23 +952,9 @@ function getFunctions(node) {
         functions: [],
       }
     };
-
-    var dataScope = {
-      name: '',
-      line: 0,
-      startScope: 0,
-      endScope: 0
-    };
-
     if (node.id) {
       data.name = node.id.name;
       data.line = node.id.loc.start.line;
-      dataScope.line = node.id.loc.start.line;
-
-      dataScope.name = node.id.name;
-      dataScope.startScope = node.loc.start.line;
-      dataScope.endScope = node.loc.end.line;
-      real_func_Scope.push(dataScope);
     } else {
       data.name = "#NONAME#" + makeRandomName();
     }
@@ -1229,47 +1025,13 @@ function getFunctions(node) {
               data.returns.literals.push(node2.argument.arguments[j].value);
               data.returns.variables.push("#CONSTANT_VAL#");
             }
-
-            var node4 = node2.argument.arguments[j];
-            if (node4.type == "CallExpression") {
-              node4 = node4.callee;
-            }
-
-            var objName4 = "";
-            while (node4.type == "MemberExpression") {
-              if (node4.property.name)
-                nodeValue = node4.property.name
-              else if (node4.property.value)
-                nodeValue = node4.property.value
-
-              if (objName4 == "")
-                objName4 = nodeValue + objName4;
-              else
-                objName4 = nodeValue + "." + objName4;
-              if (node4.object.name) {
-                objName4 = node4.object.name + "." + objName4;
-              }
-              node4 = node4.object;
-
-            }
-            if (objName4 != "") {
-              data.returns.variables.push(objName4);
-            }
           }
           args = funcName4 + argValue;
 
           if (funcName4 != "") {
             data.returns.variables.push(funcName4);
           }
-        } else if (node2.argument.type == "ConditionalExpression") {
-          if (node2.argument.consequent) {
-            data.returns.variables.push(node2.argument.consequent.name);
-          }
-          if (node2.argument.alternate) {
-            data.returns.variables.push(node2.argument.alternate.name);
-          }
         }
-
         var nodeValue = "";
         var bReturnValue = "";
         var bNode = node2.argument;
@@ -1301,8 +1063,8 @@ function getFunctions(node) {
           //startScope.pop();
           //endScope.pop();
           //}
-          //data.startScope=startScope[startScope.length-1];
-          //data.endScope=endScope[endScope.length-1];
+          data.startScope = startScope[startScope.length - 1];
+          data.endScope = endScope[endScope.length - 1];
         }
 
       }
@@ -1325,55 +1087,6 @@ function getFunctions(node) {
         functions: [],
       }
     };
-    data.startLine = node.loc.start.line;
-    data.endLine = node.loc.end.line;
-    if (node.callee.type == "FunctionExpression" && !node.callee.id) {
-      data.name = "#NONAME#" + makeRandomName();
-      delete data['startScope'];
-      delete data['endScope'];
-      var node2 = node.callee;
-      for (i = 0; i < node2.params.length; i++) {
-        if (node2.params[i].name)
-          data.arguments.variables.push(node2.params[i].name);
-        else if (node2.params[i].value) {
-          data.arguments.literals.push(node2.params[i].value);
-          data.arguments.variables.push("#CONSTANT_VAL#");
-        }
-      }
-      data.line = node2.loc.start.line;
-      real_func_names.push(data);
-
-      var data2 = {
-        name: '',
-        line: 0,
-        startScope: 0,
-        endScope: 0,
-        arguments: {
-          variables: [],
-          functions: [],
-          literals: [],
-        },
-        returns: {
-          variables: [],
-          literals: [],
-          functions: [],
-        }
-      };
-
-      data2.name = data.name;
-      for (i = 0; i < node.arguments.length; i++) {
-        if (node.arguments[i].name) {
-          data2.arguments.variables.push(node.arguments[i].name);
-        }
-      }
-      data2.startScope = startScope[startScope.length - 1];
-      data2.endScope = endScope[endScope.length - 1];
-      data2.line = node.loc.end.line;
-      real_func_call.push(data2);
-      return;
-
-    }
-
     var calleeName = node.callee.name;
     var lineNumber = node.callee.loc.start.line;
     for (i = 0; i < node.arguments.length; i++) {
@@ -1420,8 +1133,8 @@ function getFunctions(node) {
           data2.name = funcName4;
           data2.line = node5.loc.start.line;
 
-          //startScope.push(node5.loc.start.line);
-          //endScope.push(node5.loc.end.line);
+          startScope.push(node5.loc.start.line);
+          endScope.push(node5.loc.end.line);
 
           data2.startScope = startScope[startScope.length - 1];
           data2.endScope = endScope[endScope.length - 1];
@@ -1578,8 +1291,6 @@ function getFunctions(node) {
         funcName4 = nodeValue + "." + funcName4;
       if (node4.object.name) {
         funcName4 = node4.object.name + "." + funcName4;
-      } else if (node4.object.type == "ThisExpression" && currentObj != "") {
-        funcName4 = currentObj + "." + funcName4;
       }
       node4 = node4.object;
       calleeName = funcName4;
@@ -1591,7 +1302,7 @@ function getFunctions(node) {
     data.name = calleeName;
     data.line = lineNumber;
 
-    if ((startScope[startScope.length - 1] < data.line && data.line < endScope[endScope.length - 1])) {
+    if ((startScope[startScope.length - 1] < data.line && data.line < endScope[endScope.length - 1]) || startScope.length < 2) {
       data.startScope = startScope[startScope.length - 1];
       data.endScope = endScope[endScope.length - 1];
     } else {
@@ -1600,6 +1311,7 @@ function getFunctions(node) {
       data.startScope = startScope[startScope.length - 1];
       data.endScope = endScope[endScope.length - 1];
     }
+
     real_func_call.push(data);
   }
   if (node.type === 'VariableDeclarator' && node.init) {
@@ -1832,7 +1544,6 @@ function getFunctions(node) {
         traverseMini(body, function (node2) {
           if (node2.type == "ReturnStatement") {
             var args = "";
-            if(node2.argument!=null){
             if (node2.argument.name != undefined)
               data.returns.variables.push(node2.argument.name);
             if (node2.argument.value != undefined) {
@@ -1896,9 +1607,9 @@ function getFunctions(node) {
               if (funcName4 != "")
                 data.returns.variables.push(funcName4);
             }
+
           }
-        }
-      });
+        });
         real_func_names.push(data);
       } else {
         var funcName = "";
@@ -1925,14 +1636,13 @@ function getFunctions(node) {
         traverseMini(body, function (node2) {
           if (node2.type == "ReturnStatement" && node2.argument) {
             var args = "";
-            if(node2.argument!=null) {
-            if(node2.argument.name != undefined)
+            if (node2.argument.name != undefined)
               data.returns.variables.push(node2.argument.name);
             if (node2.argument.value != undefined) {
               data.returns.literals.push(node2.argument.value);
               data.returns.variables.push("#CONSTANT_VAL#");
             }
-            if(node2.argument.type == "CallExpression") {
+            if (node2.argument.type == "CallExpression") {
               var node4 = node2.argument.callee;
               var funcName4 = "";
               var nodeValue = "";
@@ -1987,14 +1697,31 @@ function getFunctions(node) {
               if (funcName4 != "")
                 data.returns.variables.push(funcName4);
             }
+
           }
-        }
-      });
+        });
         real_func_names.push(data);
       }
 
     }
   }
 }
+function clear_vars(){
+  real_func_names = [];
+  real_func_call = [];
+  real_variable_const = [];
+  real_variable_var = [];
+  real_variable_obj = [];
 
-//var reportOutput = '<!DOCTYPE html><html dir="ltr" lang="en-US"><head id="reportHead"><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta charset="utf-8"><title>JSPrime Scan Report</title><link href="scripts/lib/report/1.css" media="all" rel="stylesheet"><link href="scripts/lib/report/2.css" media="all" rel="stylesheet"><link rel="stylesheet" href="scripts/lib/custom.css"></head><body><header><div id="logo"><img src="resources/jsp_logo.png"></div></header><div id="title">static <b>javascript</b> analyzer</div><div id="output"><div class="report" data-validateurl="" id="addon-validator-suite"><div class="results"><div class="result" id="suite-results-tier-3" style=""><div class="result-header"><h4 id="extension-tests">Scan Report</h4><div id="result-summary" class="result-summary" style="visibility: visible;"></div></div><div class="tier-results tests-passed-warnings" data-tier="3" id="resultRows"></div></div></div></div></div></body></html>';
+}
+exports.clear_vars = clear_vars;
+exports.analyze = analyze;
+exports.asignFunctionReturnValue = asignFunctionReturnValue;
+
+exports.real_func_names = real_func_names;
+exports.real_func_call = real_func_call;
+exports.real_variable_const = real_variable_const;
+exports.real_variable_var = real_variable_var;
+exports.real_variable_obj = real_variable_obj;
+exports.startScope = startScope;
+exports.endScope = endScope;

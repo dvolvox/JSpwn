@@ -140,7 +140,7 @@ function htmlEncode(string) {
 };
 
 function writeResult() {
-  var hiddenValues = "<input type='hidden' id='aOrangeData' value='" + aOrangeData + "' />";
+   var hiddenValues = "<input type='hidden' id='aOrangeData' value='" + aOrangeData + "' />";
   hiddenValues += "<input type='hidden' id='aRedData' value='" + aRedData + "' />";
   hiddenValues += "<input type='hidden' id='aOtherData' value='" + aOtherData + "' />";
   hiddenValues += "<input type='hidden' id='aSink' value='" + sink + "' />";
@@ -171,7 +171,6 @@ function writeResult() {
   return resultRow;
   //win.document.getElementById('resultRows').innerHTML = resultRow;
   //win.document.close();
-
 }
 
 function doHighlight(color, line) {
