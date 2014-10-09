@@ -126,8 +126,8 @@ function asignFunctionReturnValue(sink) {
     var latestSinks = [];
    
     for (var j = 0; j < real_func_names.length; j++) {
-      
       if (val == real_func_names[j].name) {
+        //console.log("Parece que voltamos ao mesmo:" + real_func_names[j].name + "E ISTO?!" + val);
         if (real_variable_var[i].startScope >= real_func_names[j].startScope && real_variable_var[i].endScope <= real_func_names[j].endScope) {
           var objName = real_variable_var[i].name.split(".");
           for (var t = 0; t < real_func_names[j].returns.variables.length; t++) {
@@ -160,7 +160,9 @@ function asignFunctionReturnValue(sink) {
                 break;
               }*/
               // normal execution
+              //if(real_func_call.indexOf(newFunction) != -1){
               real_func_names.push(newFunction);
+              //}
               var newFunction2 = clone(real_variable_var[i]);
               convertedFunction.push(newFunction2);
             //}
@@ -182,8 +184,9 @@ function asignFunctionReturnValue(sink) {
       }
     }
   }
-
   for (var i = 0; i < real_func_call.length; i++) {
+      //console.log(real_func_call);
+
     for (var j = 0; j < real_func_names.length; j++) {
       if (real_func_call[i].name == real_func_names[j].name) {
         if (real_func_names[j].returns.functions.length > 0) {
@@ -193,7 +196,10 @@ function asignFunctionReturnValue(sink) {
           for (var k = 0; k < real_func_names[j].returns.variables.length; k++) {
             newFunction.arguments.variables.push(real_func_names[j].returns.variables[k]);
           }
+          //console.log(newFunction);
+          //if(real_func_call.indexOf(newFunction) != -1){
           real_func_call.push(newFunction);
+          //}
         }
       }
     }

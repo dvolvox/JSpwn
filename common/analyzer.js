@@ -30,7 +30,7 @@ exports.analyzeArrays = analyzeArrays;
 exports.sinkWithConstantParam = sinkWithConstantParam;
 exports.clear_vars = clear_vars;
 
-var rst = [];
+
 
 function clear_vars(){
   blackList = [];
@@ -51,9 +51,9 @@ function clear_vars(){
   startScope = [];
   endScope = [];
 }
-
+ var rst = [];
 function analyzeArrays(var1, var2, var3, var4, var5, var6, var7, sData, response) {
-  
+  rst = [];
   var real_func_names = [];
   var real_func_call = [];
   var real_variable_const = [];

@@ -1,4 +1,5 @@
-//SCANJS + JSPRIME TESTE CLI
+//JSpwMN!
+//TODO - add output html select
 // file is included here:
 var fs = require('fs');
 
@@ -16,7 +17,6 @@ var results = {};
 var dir= argv.t;
 var adata=[];
 var res = "";
-var htmlcontent = '<html><head><title>Output scanner</title></head><body>Data:'+ Date() + '</br><span style="background: none repeat scroll 0% 0% orange;width:300px;height:25px;">&nbsp;&nbsp;&nbsp;&nbsp;Source that reached the Sink&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;<span style="background: none repeat scroll 0% 0% yellow;width:300px;height:25px;">&nbsp;&nbsp;&nbsp;&nbsp;Active Source asigned to variables&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;<span style="background: none repeat scroll 0% 0% LightPink;width:300px;height:25px;">&nbsp;&nbsp;&nbsp;&nbsp;Active Source passed through a function&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;<span style="background: none repeat scroll 0% 0% BurlyWood;width:300px;height:25px;">&nbsp;&nbsp;&nbsp;&nbsp;Source that missed the Sink&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;<span style="background: none repeat scroll 0% 0% grey;width:300px;height:25px;">&nbsp;&nbsp;&nbsp;&nbsp;Non-Active Source asigned to variables&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;<span style="background: none repeat scroll 0% 0% red;width:300px;height:25px;">&nbsp;&nbsp;&nbsp;&nbsp;Active Source reached the Sink&nbsp;&nbsp;&nbsp;&nbsp;</span></br>';
 var time_scan = 0;
 var cnt = 0;
 var output = "";
@@ -59,7 +59,7 @@ function walk(dir) {
         var stat = fs.statSync(file);
         if (stat && stat.isDirectory()) results = results.concat(walk(file))
         else
-        	if( file.indexOf('vendor') === -1 && file.split('.').pop() == "js") 
+        	if( file.indexOf('vendor') === -1  && file.indexOf('tests') === -1 && file.split('.').pop() == "js") 
         	results.push(file);
     })
     return results;
@@ -75,17 +75,19 @@ var tmp_data = [];
 var input = {};
 console.log("$ SYSTEM: Files: " + files.length);
 
-var iss = [];
+var errors_m = [];
 
 
 for( var cnt = 0; cnt < files.length; cnt++){
 		console.log("$ SYSTEM: Reading File["+ cnt +"]: " + files[cnt]);
 		var data = fs.readFileSync(files[cnt], "utf8");
 		var start = new Date().getTime();
+		var iss = [];
 		try {
 		    iss = scan(data);
 		} catch (e) {
-		console.log("I caught the error: " + e.message);
+		console.log("$ SYSTEM: ERROR ALERT - " + e.message);
+		errors_m.push(files[cnt] + e.message);
 		}
 		var end = new Date().getTime();
 		input = {"id":cnt,"nome":files[cnt],"time":end-start,"issues":iss};
@@ -94,9 +96,6 @@ for( var cnt = 0; cnt < files.length; cnt++){
 		engine.clear_vars();
 }
 
-function ctrl_time(data){
-	setTimeout
-}
 
 //console.log(adata);
 var d = new Date();
@@ -125,18 +124,29 @@ else{
 
 //Save HTML format
 function p_html(jsonobj){
-	path = path.concat(".html");
-	for(var xnt = 0; xnt < jsonobj.length; xnt++){
-		var tmp_a = jsonobj[xnt].issues;
-		htmlcontent = htmlcontent.concat("<br><table></br><tr><td><strong>["+jsonobj[xnt].id+"]</strong></td><td><strong>"+jsonobj[xnt].nome+"<strong></td><td>TimeScan:["+jsonobj[xnt].time+"]</br>");	
-		for(var dnt = 0; dnt < tmp_a.length ; dnt++){
-			tmp_line =  jsonobj[xnt].issues[dnt].line;
-			if(jsonobj[xnt].issues[dnt].user_input == true )
-				{tmp_line = "<mark>" + jsonobj[xnt].issues[dnt].line + "</mark>";}
-			htmlcontent = htmlcontent.concat("<tr><td><span style=\"color:"+ jsonobj[xnt].issues[dnt].css + "\">"+ jsonobj[xnt].issues[dnt].nome + "</span></td><td>"+ tmp_line +"</td><td>"+ jsonobj[xnt].issues[dnt].code +"</td></tr>");
+	
+	var htmlcontent = '<html><head><title>Output scanner</title></head><body>Data:'+ Date() + '</br><span style="background: none repeat scroll 0% 0% orange;width:300px;height:25px;">&nbsp;&nbsp;&nbsp;&nbsp;Source that reached the Sink&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;<span style="background: none repeat scroll 0% 0% yellow;width:300px;height:25px;">&nbsp;&nbsp;&nbsp;&nbsp;Active Source asigned to variables&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;<span style="background: none repeat scroll 0% 0% LightPink;width:300px;height:25px;">&nbsp;&nbsp;&nbsp;&nbsp;Active Source passed through a function&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;<span style="background: none repeat scroll 0% 0% BurlyWood;width:300px;height:25px;">&nbsp;&nbsp;&nbsp;&nbsp;Source that missed the Sink&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;<span style="background: none repeat scroll 0% 0% grey;width:300px;height:25px;">&nbsp;&nbsp;&nbsp;&nbsp;Non-Active Source asigned to variables&nbsp;&nbsp;&nbsp;&nbsp;</span>&nbsp;&nbsp;&nbsp;&nbsp;<span style="background: none repeat scroll 0% 0% red;width:300px;height:25px;">&nbsp;&nbsp;&nbsp;&nbsp;Active Source reached the Sink&nbsp;&nbsp;&nbsp;&nbsp;</span></br><table>';
+	htmlcontent = htmlcontent.concat("</br>ERR:<strong>" + errors_m.length + '</strong></br>');
+	for (var cnt_html = 0; cnt_html < jsonobj.length; cnt_html++){
+		var tmpj = jsonobj[cnt_html];
+		if(tmpj.issues.length != 0){
+			htmlcontent = htmlcontent.concat("<tr><td></br></td></tr><tr><td><strong>ID:["+tmpj.id+"]</strong></td><td><strong>FILENAME:["+tmpj.nome+"]</strong></td><td>TIMESCAN:["+tmpj.time+"]</td></tr>");
+			for (var cnt_iss = 0; cnt_iss < tmpj.issues.length; cnt_iss++)
+			{
+				var tmpi = tmpj.issues;
+				var tmpi_line = tmpi[cnt_iss].line;
+				if(tmpi[cnt_iss].user_input == true){
+					tmpi_line = "<mark>" + tmpi[cnt_iss].line + "</mark>";
+				}
+				htmlcontent = htmlcontent.concat("<tr><td style='color:"+tmpi[cnt_iss].css+"' >"+tmpi[cnt_iss].nome+"</td><td>"+tmpi_line+"</td><td>"+tmpi[cnt_iss].code+"</td></th>");		
+			}
 		}
 	}
-	htmlcontent = htmlcontent.concat("</table></br>");
+	htmlcontent = htmlcontent.concat("</table>");
+
+
+
+	path = path.concat(".html");
 	buffer = new Buffer(htmlcontent);
 	fs.open(path, 'w', function(err, fd) {
     if (err) {
@@ -163,7 +173,7 @@ function scan(data){
 	engine.asignFunctionReturnValue(analyzer.sink);
 	var ret = analyzer.analyzeArrays(engine.real_func_names, engine.real_func_call, engine.real_variable_const, engine.real_variable_var, engine.real_variable_obj, engine.startScope, engine.endScope, data, res);
 	var tmp_array = [];
-	//console.log(ret);
+	//console.log("TMP ARRAY MOTHAFUCK:" + ret);
 	var file_a = data.split('\n');
 	var is_ui = false;
 
@@ -195,9 +205,12 @@ function scan(data){
 			tmp_i = "Active Sink";
 			css = "#ff6666";
 	    }
-	    if(file_a[ret[i][1]-1] != undefined && file_a[ret[i][1]-1] != ' '){
+	    //console.log(file_a);
+	    //console.log("LINHDA DO FICHEIRO VULN?!: " + file_a[ret[i][1]-1] );
+	    if(file_a[ret[i][1]-1] != undefined && file_a[ret[i][1]-1] != ' ' && file_a[ret[i][1]-1] != '' && file_a[ret[i][1]-1].charAt(1) != '*'){
 		    is_ui = check_is_ui(file_a[ret[i][1]-1]);
-			tmp_array.push(new_issue(tmp_i,ret[i][0],file_a[ret[i][1]-1],css,is_ui));
+		    //console.log(tmp_i + ret[i][1] + file_a[ret[i][0]-1] + css + is_ui);
+			tmp_array.push(new_issue(tmp_i,ret[i][1],file_a[ret[i][1]-1],css,is_ui));
 		}
 	}
 	//console.log(tmp_array);
