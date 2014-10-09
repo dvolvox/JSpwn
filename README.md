@@ -53,6 +53,8 @@ Note: Output is automatic generated
 Custom Scanning
 ======
 
+FOR WEB INTERFACE VERSION ::
+
 Source Array: Analyzer.js:26
 Sink Array: Analyzer.js:27
 
@@ -62,6 +64,12 @@ User-Input-Validator: scanctrl.js:865
 
 Attack-vector: scanctrl.js:900
 
+FOR CLI VERSION ::
+
+Add -c argument for loading custom rules from file:
+custom_userinput.txt
+custom_source.txt
+custom_sink.txt
 
 Future Features
 ======
