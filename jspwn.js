@@ -173,7 +173,6 @@ function scan(data){
 	engine.asignFunctionReturnValue(analyzer.sink);
 	var ret = analyzer.analyzeArrays(engine.real_func_names, engine.real_func_call, engine.real_variable_const, engine.real_variable_var, engine.real_variable_obj, engine.startScope, engine.endScope, data, res);
 	var tmp_array = [];
-	//console.log("TMP ARRAY MOTHAFUCK:" + ret);
 	var file_a = data.split('\n');
 	var is_ui = false;
 

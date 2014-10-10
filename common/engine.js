@@ -124,7 +124,8 @@ function asignFunctionReturnValue(sink) {
     var endScope = real_variable_var[i].endScope;
 
     var latestSinks = [];
-   
+         var contador_geral_de_bugs = 0;
+
     for (var j = 0; j < real_func_names.length; j++) {
       if (val == real_func_names[j].name) {
         //console.log("Parece que voltamos ao mesmo:" + real_func_names[j].name + "E ISTO?!" + val);
@@ -161,6 +162,10 @@ function asignFunctionReturnValue(sink) {
               }*/
               // normal execution
               //if(real_func_call.indexOf(newFunction) != -1){
+              console.log(contador_geral_de_bugs);
+              //if(real_func_call.indexOf(newFunction) != -1){
+              contador_geral_de_bugs++;
+              if(contador_geral_de_bugs >= 10000){ break;}
               real_func_names.push(newFunction);
               //}
               var newFunction2 = clone(real_variable_var[i]);
@@ -196,8 +201,10 @@ function asignFunctionReturnValue(sink) {
           for (var k = 0; k < real_func_names[j].returns.variables.length; k++) {
             newFunction.arguments.variables.push(real_func_names[j].returns.variables[k]);
           }
-          //console.log(newFunction);
+          //console.log(contador_geral_de_bugs);
           //if(real_func_call.indexOf(newFunction) != -1){
+          contador_geral_de_bugs++;
+          if(contador_geral_de_bugs >= 10000){ break;}
           real_func_call.push(newFunction);
           //}
         }
