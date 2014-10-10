@@ -67,8 +67,11 @@ Attack-vector: scanctrl.js:900
 FOR CLI VERSION ::
 
 Add -c argument for loading custom rules from file:
+
 custom_userinput.txt
+
 custom_source.txt
+
 custom_sink.txt
 
 Future Features
