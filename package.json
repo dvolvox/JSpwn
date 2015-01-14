@@ -21,9 +21,6 @@
   "author": "Duarte Monteiro",
   "license": "MIT",
   "dependencies": {
-     "node-print": "0.0.4",
-      "request": "^2.40.0",
-      "qs": "^0.5",
     "acorn": "~0.3.0",
     "tern": "~0.5.0",
     "optimist": "~0.5.2",
